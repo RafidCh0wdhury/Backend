@@ -7,7 +7,7 @@ const bodyParser = require("body-parser");
 
 const User = require("./models/user");
 const Resource = require("./models/resource");
-const Download = require("./models/downloads");
+
 
 const userRoutes = require("./routes/user")
 const resourceRoutes = require("./routes/resource")
@@ -33,8 +33,6 @@ app.use(resourceRoutes)
 User.hasMany(Resource, { foreignKey: 'userId' });
 Resource.belongsTo(User, { foreignKey: 'userId' });
 
-User.belongsToMany(Resource, { through: Download, foreignKey: 'userId' });
-Resource.belongsToMany(User, { through: Download, foreignKey: 'resourceId' }); 
 
 
 
