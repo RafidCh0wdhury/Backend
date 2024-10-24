@@ -3,6 +3,7 @@ const { Op } = require("sequelize");
 const dotenv = require("dotenv");
 const User = require("../models/user");
 const Resource = require("../models/resource");
+const MyList = require("../models/mylist");
 const fs = require("fs");
 const multer = require("multer");
 
@@ -36,7 +37,7 @@ exports.uploadResource = async (req, res, next) => {
 
     const path = req.file.path;
     const uniqueFilename = new Date().toISOString();
-    const { userId, fileName } = req.body;
+    const { userId, resourceName, resourceClass } = req.body;
 
     cloudinary.uploader.upload(
       path,
@@ -50,8 +51,9 @@ exports.uploadResource = async (req, res, next) => {
 
         const resource = {
           userId,
-          fileName,
-          filePath: image.secure_url,
+          resourceName,
+          resourcePath: image.secure_url,
+          resourceClass,
         };
 
         const response = await Resource.create(resource);
@@ -123,3 +125,50 @@ exports.deleteResource = async (req, res) => {
       res.send({ message: "Resource couldn't be deleted!" }).status(404)
     );
 };
+
+exports.addToList = async (req, res) => {
+  const { userId, resourceId } = req.body;
+
+  const data = {
+    userId,
+    resourceId,
+  };
+
+  try {
+    const response = await MyList.create(data);
+    return res.status(201).json(response); // Ensure you're returning JSON
+  } catch (error) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.getMyList = async (req, res) => {
+  const { userId } = req.params;
+  console.log(userId);
+
+  try {
+    const myListItems = await MyList.findAll({
+      where: {
+        userId: {
+          [Op.eq]: userId,
+        },
+      },
+      include: [
+        {
+          model: Resource,
+          attributes: ["resourceName", "resourceClass", "resourcePath"], // Specify the fields you want from the User model
+        },
+      ],
+    });
+
+    console.log(myListItems, "ssssssssss");
+
+    return res.status(200).send(myListItems);
+  } catch (err) {
+    return res
+      .status(500)
+      .send({ message: "An error occurred while fetching resources." });
+  }
+};
+
+exports.deleteFromList = async (req, res) => {};
